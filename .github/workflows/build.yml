@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -13,20 +14,25 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install openjdk-17-jdk -y
+          sudo apt-get install openjdk-17-jdk git-core gnupg flex bison \
+          build-essential zip curl zlib1g-dev gcc-multilib g++-multilib \
+          libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev \
+          lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig \
+          python-is-python3 -y
 
       - name: Set up repo
         run: |
           mkdir lineage
           cd lineage
           repo init -u https://github.com/LineageOS/android.git -b lineage-21.0
-          repo sync -j$(nproc --all) --no-clone-bundle --no-tags
+          repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags
 
-      - name: Clone device sources
+      - name: Clone device, vendor, kernel trees
         run: |
           cd lineage
           git clone https://github.com/LineageOS/android_device_xiaomi_miatoll.git -b lineage-21.0 device/xiaomi/miatoll
-          # Add kernel + vendor sources too
+          git clone https://github.com/LineageOS/android_vendor_xiaomi_miatoll.git -b lineage-21.0 vendor/xiaomi/miatoll
+          git clone https://github.com/LineageOS/android_kernel_xiaomi_miatoll.git -b lineage-21.0 kernel/xiaomi/miatoll
 
       - name: Build ROM
         run: |
@@ -38,5 +44,5 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v3
         with:
-          name: LineageOS-miatoll
+          name: lineageos-build
           path: lineage/out/target/product/miatoll/*.zip
